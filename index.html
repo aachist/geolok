@@ -1,61 +1,278 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>Моё местоположение</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <style>
-    body { font-family: sans-serif; text-align: center; margin: 20px; }
-    #map { height: 400px; margin-top: 15px; border-radius: 10px; }
-    button { padding: 10px 20px; font-size: 16px; border-radius: 6px; cursor: pointer; }
-    p { font-size: 18px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Мое местоположение на карте</title>
+    
+    <!-- Подключаем Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
+          crossorigin=""/>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            line-height: 1.6;
+            padding: 0;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 16px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 1000;
+        }
+        
+        h1 {
+            font-size: 1.5rem;
+            margin: 0;
+        }
+        
+        #map-container {
+            flex: 1;
+            position: relative;
+        }
+        
+        #map {
+            height: 100%;
+            width: 100%;
+            z-index: 100;
+        }
+        
+        #status {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 200;
+            max-width: 80%;
+        }
+        
+        #coordinates {
+            position: absolute;
+            bottom: 20px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            z-index: 300;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+        }
+        
+        .button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 16px;
+            margin-top: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .button:hover {
+            background-color: #2980b9;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .accuracy-circle {
+            stroke: #3498db;
+            stroke-width: 2;
+            fill: #3498db;
+            fill-opacity: 0.2;
+        }
+        
+        footer {
+            padding: 10px;
+            text-align: center;
+            font-size: 12px;
+            color: #7f8c8d;
+            background-color: #ecf0f1;
+        }
+    </style>
 </head>
 <body>
-  <h2>Определение координат</h2>
-  <button onclick="getLocation()">Определить</button>
-  <p id="output"></p>
-  <div id="map"></div>
+    <header>
+        <h1>Мое местоположение</h1>
+    </header>
+    
+    <div id="map-container">
+        <div id="map"></div>
+        <div id="status">
+            <p>Определение вашего местоположения...</p>
+            <button id="locate-btn" class="button hidden">Определить местоположение</button>
+        </div>
+        <div id="coordinates" class="hidden"></div>
+    </div>
+    
+    <footer>
+        <p>Картографические данные © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a></p>
+    </footer>
 
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script>
-    let map, marker;
-
-    function initMap(lat = 55.751244, lon = 37.618423) { // Москва по умолчанию
-      map = L.map('map').setView([lat, lon], 13);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap'
-      }).addTo(map);
-      marker = L.marker([lat, lon]).addTo(map);
-    }
-
-    function getLocation() {
-      const out = document.getElementById("output");
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            const lat = pos.coords.latitude;
-            const lon = pos.coords.longitude;
-            const acc = pos.coords.accuracy;
-
-            out.innerHTML =
-              "Широта: " + lat.toFixed(6) + "<br>" +
-              "Долгота: " + lon.toFixed(6) + "<br>" +
-              "Точность: " + acc + " м";
-
-            map.setView([lat, lon], 15);
-            marker.setLatLng([lat, lon]);
-          },
-          (err) => {
-            out.textContent = "Ошибка: " + err.message;
-          }
-        );
-      } else {
-        out.textContent = "Ваш браузер не поддерживает геолокацию.";
-      }
-    }
-
-    window.onload = () => initMap();
-  </script>
+    <!-- Подключаем Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
+            crossorigin=""></script>
+    
+    <script>
+        // Инициализация переменных
+        let map, marker, accuracyCircle;
+        let watchId = null;
+        
+        // Элементы DOM
+        const statusElement = document.getElementById('status');
+        const coordinatesElement = document.getElementById('coordinates');
+        const locateButton = document.getElementById('locate-btn');
+        
+        // Функция инициализации карты
+        function initMap(lat, lng, zoom = 16) {
+            // Создаем карту с центром в указанных координатах
+            map = L.map('map').setView([lat, lng], zoom);
+            
+            // Добавляем слой OpenStreetMap
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 19
+            }).addTo(map);
+            
+            // Создаем маркер
+            marker = L.marker([lat, lng]).addTo(map);
+            
+            // Обновляем информацию о координатах
+            updateCoordinates(lat, lng);
+            coordinatesElement.classList.remove('hidden');
+            
+            // Скрываем статус
+            statusElement.classList.add('hidden');
+        }
+        
+        // Функция обновления координат на экране
+        function updateCoordinates(lat, lng) {
+            coordinatesElement.innerHTML = `
+                Широта: ${lat.toFixed(6)}<br>
+                Долгота: ${lng.toFixed(6)}
+            `;
+        }
+        
+        // Функция обновления позиции на карте
+        function updatePosition(position) {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            const accuracy = position.coords.accuracy;
+            
+            // Если карта еще не инициализирована, инициализируем
+            if (!map) {
+                initMap(lat, lng);
+            } else {
+                // Обновляем позицию маркера
+                marker.setLatLng([lat, lng]);
+                
+                // Центрируем карту на новой позиции
+                map.setView([lat, lng]);
+                
+                // Обновляем информацию о координатах
+                updateCoordinates(lat, lng);
+            }
+            
+            // Обновляем круг точности
+            if (accuracyCircle) {
+                map.removeLayer(accuracyCircle);
+            }
+            
+            accuracyCircle = L.circle([lat, lng], {
+                radius: accuracy,
+                className: 'accuracy-circle'
+            }).addTo(map);
+        }
+        
+        // Функция обработки ошибок геолокации
+        function handleLocationError(error) {
+            let errorMessage;
+            
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    errorMessage = "Доступ к геолокации запрещен. Разрешите доступ к геоданным в настройках браузера.";
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    errorMessage = "Информация о местоположении недоступна.";
+                    break;
+                case error.TIMEOUT:
+                    errorMessage = "Время запроса на получение местоположения истекло.";
+                    break;
+                default:
+                    errorMessage = "Произошла неизвестная ошибка.";
+                    break;
+            }
+            
+            statusElement.innerHTML = `<p>${errorMessage}</p>`;
+            locateButton.classList.remove('hidden');
+        }
+        
+        // Функция запуска отслеживания местоположения
+        function startTracking() {
+            if ("geolocation" in navigator) {
+                statusElement.innerHTML = "<p>Определение вашего местоположения...</p>";
+                locateButton.classList.add('hidden');
+                
+                // Запрашиваем текущее положение
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        updatePosition(position);
+                        
+                        // Продолжаем отслеживать изменения положения
+                        watchId = navigator.geolocation.watchPosition(
+                            updatePosition,
+                            handleLocationError,
+                            {
+                                enableHighAccuracy: true,
+                                maximumAge: 10000,
+                                timeout: 5000
+                            }
+                        );
+                    },
+                    handleLocationError,
+                    {
+                        enableHighAccuracy: true,
+                        maximumAge: 0,
+                        timeout: 10000
+                    }
+                );
+            } else {
+                statusElement.innerHTML = "<p>Геолокация не поддерживается вашим браузером.</p>";
+            }
+        }
+        
+        // Обработчик клика по кнопке
+        locateButton.addEventListener('click', startTracking);
+        
+        // Запускаем отслеживание при загрузке страницы
+        document.addEventListener('DOMContentLoaded', startTracking);
+    </script>
 </body>
 </html>
