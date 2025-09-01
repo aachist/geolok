@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Точность геолокации</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .info {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h2>Проверка точности геолокации</h2>
+    
+    <button onclick="checkAccuracy()">Проверить точность</button>
+    
+    <div id="result" class="info">
+        Нажмите кнопку для проверки точности
+    </div>
+
+    <div class="info">
+        <h3>Факторы, влияющие на точность:</h3>
+        <ul>
+            <li><strong>Устройство:</strong> Смартфоны с GPS точнее компьютеров</li>
+            <li><strong>Настройки:</strong> Высокая точность vs. Экономия энергии</li>
+            <li><strong>Окружение:</strong> Открытое небо улучшает GPS сигнал</li>
+            <li><strong>Wi-Fi/Bluetooth:</strong> Включенные модули улучшают точность</li>
+        </ul>
+    </div>
+
+    <script>
+    function checkAccuracy() {
+        if (!navigator.geolocation) {
+            document.getElementById('result').innerHTML = 
+                'Геолокация не поддерживается вашим браузером';
+            return;
+        }
+
+        document.getElementById('result').innerHTML = 'Определяем местоположение...';
+
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                const accuracy = position.coords.accuracy;
+                const altitudeAccuracy = position.coords.altitudeAccuracy;
+                
+                let resultHTML = `
+                    <h3>Результаты:</h3>
+                    <p><strong>Точность определения:</strong> ${accuracy.toFixed(1)} метров</p>
+                    <p><strong>Широта:</strong> ${position.coords.latitude.toFixed(6)}</p>
+                    <p><strong>Долгота:</strong> ${position.coords.longitude.toFixed(6)}</p>
+                `;
+
+                if (altitudeAccuracy) {
+                    resultHTML += `<p><strong>Точность высоты:</strong> ${altitudeAccuracy.toFixed(1)} метров</p>`;
+                }
+
+                resultHTML += `
+                    <p><strong>Метод определения:</strong> ${accuracy < 20 ? 'Вероятно GPS' : 
+                        accuracy < 100 ? 'Wi-Fi/Сотовая сеть' : 'IP-адрес (менее точно)'}</p>
+                `;
+
+                document.getElementById('result').innerHTML = resultHTML;
+            },
+            function(error) {
+                let errorMessage;
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        errorMessage = 'Доступ к геолокации запрещен';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        errorMessage = 'Информация о местоположении недоступна';
+                        break;
+                    case error.TIMEOUT:
+                        errorMessage = 'Время запроса истекло';
+                        break;
+                    default:
+                        errorMessage = 'Произошла неизвестная ошибка';
+                }
+                document.getElementById('result').innerHTML = 
+                    `<p style="color: red;">Ошибка: ${errorMessage}</p>`;
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            }
+        );
+    }
+    </script>
+</body>
+</html>
